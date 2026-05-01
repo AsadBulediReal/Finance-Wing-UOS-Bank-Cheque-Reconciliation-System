@@ -1,11 +1,17 @@
 import { useState, useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmAction } from '../ui/ConfirmAction';
 
 export default function UploadStatement() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, description: string, variant?: "default" | "destructive" } | null>(null);
+
+  const showAlert = (title: string, description: string, variant: "default" | "destructive" = "default") => {
+    setAlertConfig({ isOpen: true, title, description, variant });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -15,20 +21,18 @@ export default function UploadStatement() {
 
   const handleUpload = async () => {
     if (!file) {
-      alert('Please select a file first.');
+      showAlert('Required', 'Please select a file first.', 'destructive');
       return;
     }
 
     setIsUploading(true);
     try {
-      // We pass an empty object or just the necessary fields if needed.
-      // The backend now extracts name, dates, account info, etc. automatically.
       await api.uploadStatement(file, { uploadedBy: 'Current User' });
-      alert('Bank statement uploaded successfully!');
+      showAlert('Success', 'Bank statement uploaded successfully!');
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      showAlert('Error', `Error: ${error.response?.data?.message || error.message}`, 'destructive');
     } finally {
       setIsUploading(false);
     }
@@ -87,6 +91,16 @@ export default function UploadStatement() {
           Cancel
         </button>
       </div>
+      <ConfirmAction
+        isOpen={!!alertConfig?.isOpen}
+        onClose={() => setAlertConfig(null)}
+        onConfirm={() => setAlertConfig(null)}
+        title={alertConfig?.title || 'Notification'}
+        description={alertConfig?.description || ''}
+        confirmText="OK"
+        showCancel={false}
+        variant={alertConfig?.variant}
+      />
     </div>
   );
 }

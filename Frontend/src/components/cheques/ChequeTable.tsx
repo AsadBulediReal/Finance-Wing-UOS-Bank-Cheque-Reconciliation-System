@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import Pagination from '../ui/Pagination';
 import ReconciliationDetailsModal from '../dashboard/ReconciliationDetailsModal';
+import { ConfirmAction } from '../ui/ConfirmAction';
 
 export default function ChequeTable() {
   const [cheques, setCheques] = useState<any[]>([]);
@@ -13,6 +14,12 @@ export default function ChequeTable() {
     limit: 5
   });
   const [selectedChequeId, setSelectedChequeId] = useState<string | null>(null);
+  const [resettingChequeId, setResettingChequeId] = useState<string | null>(null);
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, description: string, variant?: "default" | "destructive" } | null>(null);
+
+  const showAlert = (title: string, description: string, variant: "default" | "destructive" = "default") => {
+    setAlertConfig({ isOpen: true, title, description, variant });
+  };
 
   const fetchCheques = (page = 1, limit = pagination.limit) => {
     setIsLoading(true);
@@ -42,6 +49,16 @@ export default function ChequeTable() {
 
   const handlePageSizeChange = (newSize: number) => {
     fetchCheques(1, newSize);
+  };
+
+  const handleResetCheque = async (id: string) => {
+    try {
+      await api.markUnchased(id);
+      showAlert('Success', 'Cheque reset successfully.');
+      fetchCheques(pagination.page);
+    } catch (err) {
+      showAlert('Error', 'Failed to update cheque status.', 'destructive');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -104,16 +121,7 @@ export default function ChequeTable() {
                     </button>
                     {cheque.status !== 'UNCASHED' && (
                       <button 
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to mark this cheque as unchased? This will remove its cashed status.')) {
-                            try {
-                              await api.markUnchased(cheque._id);
-                              fetchCheques(pagination.page);
-                            } catch (err) {
-                              alert('Failed to update cheque status');
-                            }
-                          }
-                        }}
+                        onClick={() => setResettingChequeId(cheque._id)}
                         className="px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-md font-medium text-xs transition-colors"
                       >
                         Reset
@@ -143,6 +151,27 @@ export default function ChequeTable() {
           onClose={() => setSelectedChequeId(null)} 
         />
       )}
+
+      <ConfirmAction
+        isOpen={!!resettingChequeId}
+        onClose={() => setResettingChequeId(null)}
+        onConfirm={() => resettingChequeId && handleResetCheque(resettingChequeId)}
+        title="Reset Cheque Status"
+        description="Are you sure you want to mark this cheque as unchased? This will remove its cashed status and free up any linked bank records."
+        confirmText="Reset Status"
+        variant="destructive"
+      />
+
+      <ConfirmAction
+        isOpen={!!alertConfig?.isOpen}
+        onClose={() => setAlertConfig(null)}
+        onConfirm={() => setAlertConfig(null)}
+        title={alertConfig?.title || 'Notification'}
+        description={alertConfig?.description || ''}
+        confirmText="OK"
+        showCancel={false}
+        variant={alertConfig?.variant}
+      />
     </div>
   );
 }

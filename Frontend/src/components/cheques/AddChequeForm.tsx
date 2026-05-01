@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../lib/api';
+import { ConfirmAction } from '../ui/ConfirmAction';
 
 export default function AddChequeForm() {
   const [formData, setFormData] = useState({
@@ -8,6 +9,11 @@ export default function AddChequeForm() {
     description: '',
     amount: ''
   });
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, description: string, variant?: "default" | "destructive" } | null>(null);
+
+  const showAlert = (title: string, description: string, variant: "default" | "destructive" = "default") => {
+    setAlertConfig({ isOpen: true, title, description, variant });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,7 +21,7 @@ export default function AddChequeForm() {
 
   const handleSave = async () => {
     if (!formData.issueDate || !formData.chequeNo || !formData.amount) {
-      alert('Please fill in all required fields.');
+      showAlert('Required', 'Please fill in all required fields.', 'destructive');
       return;
     }
 
@@ -24,10 +30,10 @@ export default function AddChequeForm() {
         ...formData,
         amount: parseFloat(formData.amount)
       });
-      alert('Cheque added successfully!');
+      showAlert('Success', 'Cheque added successfully!');
       setFormData({ issueDate: '', chequeNo: '', description: '', amount: '' });
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      showAlert('Error', `Error: ${error.response?.data?.message || error.message}`, 'destructive');
     }
   };
 
@@ -93,6 +99,16 @@ export default function AddChequeForm() {
           Clear
         </button>
       </div>
+      <ConfirmAction
+        isOpen={!!alertConfig?.isOpen}
+        onClose={() => setAlertConfig(null)}
+        onConfirm={() => setAlertConfig(null)}
+        title={alertConfig?.title || 'Notification'}
+        description={alertConfig?.description || ''}
+        confirmText="OK"
+        showCancel={false}
+        variant={alertConfig?.variant}
+      />
     </div>
   );
 }

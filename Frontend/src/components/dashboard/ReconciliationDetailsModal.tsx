@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, Info, User, Calendar, Hash, CreditCard, AlertCircle, Search, ArrowRight, ExternalLink, DollarSign, AlignLeft } from 'lucide-react';
+import { X, CheckCircle, Info, User, Calendar, Hash, CreditCard, AlertCircle, Search, ArrowRight, DollarSign, AlignLeft } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmAction } from '../ui/ConfirmAction';
 
 interface ReconciliationDetailsModalProps {
   chequeId: string;
@@ -14,6 +15,15 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
   const [cheque, setCheque] = useState<any>(null);
   const [potentialMatches, setPotentialMatches] = useState<any[]>([]);
   const [isMatching, setIsMatching] = useState(false);
+  
+  // Custom dialog states
+  const [confirmMatchId, setConfirmMatchId] = useState<string | null>(null);
+  const [isUnlinkConfirmOpen, setIsUnlinkConfirmOpen] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, description: string, variant?: "default" | "destructive", onConfirm?: () => void } | null>(null);
+
+  const showAlert = (title: string, description: string, variant: "default" | "destructive" = "default", onConfirm?: () => void) => {
+    setAlertConfig({ isOpen: true, title, description, variant, onConfirm });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,23 +31,16 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
       setError(null);
       
       try {
-        // 1. Try to get reconciliation details
         const recData = await api.getReconciliationDetails(chequeId);
         setData(recData);
         setCheque(recData.chequeId);
       } catch (err: any) {
-        console.log('Reconciliation record not found, checking cheque status...');
-        
         try {
-          // 2. If no reconciliation record, fetch the cheque info
           const found = await api.getChequeById(chequeId);
-          
           if (found) {
             setCheque(found);
             if (found.status === 'UNCASHED' || found.status === 'UNRECONCILED') {
               setError(found.status === 'UNCASHED' ? 'UNCASHED_INFO' : 'UNRECONCILED_INFO');
-              
-              // 3. Fetch potential matches for unlinked cheques
               try {
                 const matches = await api.getPotentialMatches(chequeId);
                 setPotentialMatches(matches);
@@ -62,20 +65,29 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
   }, [chequeId]);
 
   const handleManualMatch = async (transactionId: string) => {
-    if (!window.confirm('Are you sure you want to reconcile this cheque with this bank transaction?')) return;
-    
     setIsMatching(true);
     try {
       await api.manualReconcile(chequeId, transactionId);
-      // Reload details after matching
-      onClose();
-      // Optionally trigger a refresh in parent components via context or event if needed, 
-      // but usually the modal closing is enough if the list refreshes on mount.
-      window.location.reload(); // Simple way to refresh the dashboard/tables
+      showAlert('Success', 'Reconciliation successful!', 'default', () => {
+        onClose();
+        window.location.reload();
+      });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to reconcile.');
+      showAlert('Error', err.response?.data?.message || 'Failed to reconcile.', 'destructive');
     } finally {
       setIsMatching(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    try {
+      await api.markUnchased(chequeId);
+      showAlert('Success', 'Cheque unlinked successfully.', 'default', () => {
+        onClose();
+        window.location.reload();
+      });
+    } catch (err) {
+      showAlert('Error', 'Failed to unlink cheque.', 'destructive');
     }
   };
 
@@ -93,26 +105,15 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
   const isUnlinked = error === 'UNCASHED_INFO' || error === 'UNRECONCILED_INFO';
   
   const getEffectiveMatchedFields = () => {
-    if (data?.matchedFields && data.matchedFields.length > 0) {
-      return data.matchedFields;
-    }
-    
-    // Legacy support: Guess the matched fields for old records
+    if (data?.matchedFields && data.matchedFields.length > 0) return data.matchedFields;
     if (!data || isUnlinked) return [];
-    
-    const fields = ['AMOUNT']; // All matched records must have matched amount
-    
-    // Check Cheque No
+    const fields = ['AMOUNT'];
     if (cheque?.chequeNo) {
       const refNo = (data.transactionId?.refNo || '').toLowerCase();
       const transDesc = (data.transactionId?.description || '').toLowerCase();
       const cNo = cheque.chequeNo.toLowerCase();
-      if (refNo.includes(cNo) || transDesc.includes(cNo)) {
-        fields.push('CHEQUE_NO');
-      }
+      if (refNo.includes(cNo) || transDesc.includes(cNo)) fields.push('CHEQUE_NO');
     }
-    
-    // Check Description (if not already matched by Cheque No)
     if (!fields.includes('CHEQUE_NO') && cheque?.description && data.transactionId?.description) {
       const cDesc = cheque.description.toLowerCase().replace(/\s+/g, ' ').trim();
       const tDesc = data.transactionId.description.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -120,7 +121,6 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
         fields.push('DESCRIPTION');
       }
     }
-    
     return fields;
   };
 
@@ -191,17 +191,7 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
                   {/* Unlink Action */}
                   <div className="sm:col-span-2 pt-3 flex justify-end">
                     <button
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to unlink this cheque from the bank record?')) {
-                          try {
-                            await api.markUnchased(chequeId);
-                            onClose();
-                            window.location.reload();
-                          } catch (err) {
-                            alert('Failed to unlink cheque.');
-                          }
-                        }
-                      }}
+                      onClick={() => setIsUnlinkConfirmOpen(true)}
                       className="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest flex items-center gap-1 transition-colors px-2 py-1 rounded bg-red-50 hover:bg-red-100 border border-red-100"
                     >
                       <AlertCircle className="h-3 w-3" /> Unlink & Reset Cheque
@@ -329,7 +319,7 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
                 </div>
               </div>
 
-              {/* Potential Matches Section (The core requested feature) */}
+              {/* Potential Matches Section */}
               {isUnlinked && potentialMatches.length > 0 && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                   <div className="flex justify-between items-center">
@@ -341,7 +331,6 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
                   
                   <div className="grid gap-3">
                     {potentialMatches.map((match) => {
-                      // Check for description overlap (stricter check with whitespace normalization)
                       const chequeDesc = (cheque?.description || '').toLowerCase().replace(/\s+/g, ' ').trim();
                       const matchDesc = (match.description || '').toLowerCase().replace(/\s+/g, ' ').trim();
                       const isDescClose = chequeDesc.length >= 3 && matchDesc.length >= 3 && (matchDesc.includes(chequeDesc) || chequeDesc.includes(matchDesc));
@@ -369,7 +358,7 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
                           </div>
                           
                           <button
-                            onClick={() => handleManualMatch(match._id)}
+                            onClick={() => setConfirmMatchId(match._id)}
                             disabled={isMatching}
                             className="mt-3 sm:mt-0 sm:ml-4 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                           >
@@ -401,6 +390,40 @@ export default function ReconciliationDetailsModal({ chequeId, onClose }: Reconc
           </div>
         </div>
       </div>
+      
+      {/* Custom Dialogs */}
+      <ConfirmAction
+        isOpen={!!confirmMatchId}
+        onClose={() => setConfirmMatchId(null)}
+        onConfirm={() => confirmMatchId && handleManualMatch(confirmMatchId)}
+        title="Reconcile Transaction"
+        description="Are you sure you want to reconcile this cheque with this bank transaction? This action will update the status of both records."
+        confirmText="Match & Reconcile"
+      />
+      
+      <ConfirmAction
+        isOpen={isUnlinkConfirmOpen}
+        onClose={() => setIsUnlinkConfirmOpen(false)}
+        onConfirm={handleUnlink}
+        title="Unlink & Reset Cheque"
+        description="Are you sure you want to unlink this cheque from the bank record? The cheque will be marked as UNCASHED and the bank transaction will be freed."
+        confirmText="Unlink Record"
+        variant="destructive"
+      />
+
+      <ConfirmAction
+        isOpen={!!alertConfig?.isOpen}
+        onClose={() => setAlertConfig(null)}
+        onConfirm={() => {
+          alertConfig?.onConfirm?.();
+          setAlertConfig(null);
+        }}
+        title={alertConfig?.title || 'Notification'}
+        description={alertConfig?.description || ''}
+        confirmText="OK"
+        showCancel={false}
+        variant={alertConfig?.variant}
+      />
     </div>
   );
 }

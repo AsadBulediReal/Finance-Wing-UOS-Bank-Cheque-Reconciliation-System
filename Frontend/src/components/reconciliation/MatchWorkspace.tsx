@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CheckSquare, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmAction } from '../ui/ConfirmAction';
 
 interface MatchWorkspaceProps {
   selectedCheque: any;
@@ -10,29 +11,34 @@ interface MatchWorkspaceProps {
 
 export default function MatchWorkspace({ selectedCheque, possibleMatches, onReconciled }: MatchWorkspaceProps) {
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
+  const [alertConfig, setAlertConfig] = useState<{ isOpen: boolean, title: string, description: string, variant?: "default" | "destructive" } | null>(null);
+
+  const showAlert = (title: string, description: string, variant: "default" | "destructive" = "default") => {
+    setAlertConfig({ isOpen: true, title, description, variant });
+  };
 
   const handleReconcile = async () => {
     if (!selectedMatchId) {
-      alert('Please select a matching transaction first.');
+      showAlert('Required', 'Please select a matching transaction first.', 'destructive');
       return;
     }
 
     try {
       await api.manualReconcile(selectedCheque._id, selectedMatchId);
-      alert('Reconciliation successful!');
+      showAlert('Success', 'Reconciliation successful!');
       onReconciled();
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      showAlert('Error', `Error: ${error.response?.data?.message || error.message}`, 'destructive');
     }
   };
 
   const handleMarkUnchased = async () => {
     try {
       await api.markUnchased(selectedCheque._id);
-      alert('Cheque marked as unchased.');
+      showAlert('Success', 'Cheque marked as unchased.');
       onReconciled();
     } catch (error: any) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      showAlert('Error', `Error: ${error.response?.data?.message || error.message}`, 'destructive');
     }
   };
 
@@ -122,6 +128,16 @@ export default function MatchWorkspace({ selectedCheque, possibleMatches, onReco
           </div>
         </div>
       </div>
+      <ConfirmAction
+        isOpen={!!alertConfig?.isOpen}
+        onClose={() => setAlertConfig(null)}
+        onConfirm={() => setAlertConfig(null)}
+        title={alertConfig?.title || 'Notification'}
+        description={alertConfig?.description || ''}
+        confirmText="OK"
+        showCancel={false}
+        variant={alertConfig?.variant}
+      />
     </div>
   );
 }

@@ -5,9 +5,12 @@ import ChequesPage from './pages/ChequesPage';
 import StatementsPage from './pages/StatementsPage';
 import ManualReconciliationPage from './pages/ManualReconciliationPage';
 
+import { Toaster } from 'sonner';
+
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-center" richColors />
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
