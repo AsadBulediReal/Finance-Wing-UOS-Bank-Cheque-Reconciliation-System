@@ -29,38 +29,45 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-[1600px] mx-auto space-y-10 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard &ndash; Reconciliation Summary</h1>
-          <p className="text-slate-500 mt-2">Overview of cheques and their reconciliation status.</p>
+          <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 font-heading">
+            System <span className="text-indigo-600">Dashboard</span>
+          </h1>
+          <p className="text-slate-500 mt-2 font-medium">
+            Real-time overview of cheques and bank statement reconciliation status.
+          </p>
         </div>
         
         <button 
           onClick={() => setIsConfirmOpen(true)}
           disabled={isReconciling}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          className="flex items-center gap-3 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 hover:shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 group overflow-hidden relative"
         >
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           {isReconciling ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-5 w-5 animate-spin relative z-10" />
           ) : (
-            <Play className="h-5 w-5" />
+            <Play className="h-5 w-5 relative z-10 group-hover:scale-110 transition-transform" />
           )}
-          {isReconciling ? 'Reconciling...' : 'Run Auto-Reconcile'}
+          <span className="relative z-10">{isReconciling ? 'Processing Match Engine...' : 'Run Auto-Reconcile'}</span>
         </button>
       </div>
       
       <SummaryCards key={`summary-${refreshKey}`} />
       
-      <RecentReconciliationTable key={`table-${refreshKey}`} />
+      <div className="pt-4">
+        <RecentReconciliationTable key={`table-${refreshKey}`} />
+      </div>
 
       <ConfirmAction
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleAutoReconcile}
-        title="Run Auto-Reconciliation"
-        description="This will scan all uncashed cheques and attempt to match them with available bank statement records. Do you want to proceed?"
-        confirmText="Run Now"
+        title="Trigger Match Engine"
+        description="This will execute the automated reconciliation logic across all pending records. This process is optimized for high accuracy. Proceed?"
+        confirmText="Execute Now"
       />
 
       <ConfirmAction

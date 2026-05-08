@@ -3,6 +3,7 @@ import { api } from '../../lib/api';
 import Pagination from '../ui/Pagination';
 import ReconciliationDetailsModal from '../dashboard/ReconciliationDetailsModal';
 import { ConfirmAction } from '../ui/ConfirmAction';
+import { RotateCcw, ListFilter, Search } from 'lucide-react';
 
 export default function ChequeTable() {
   const [cheques, setCheques] = useState<any[]>([]);
@@ -56,6 +57,7 @@ export default function ChequeTable() {
       await api.markUnchased(id);
       showAlert('Success', 'Cheque reset successfully.');
       fetchCheques(pagination.page);
+      setResettingChequeId(null);
     } catch (err) {
       showAlert('Error', 'Failed to update cheque status.', 'destructive');
     }
@@ -63,66 +65,96 @@ export default function ChequeTable() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'CASHED': return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-md uppercase">CASHED</span>;
-      case 'UNCHASED': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-md uppercase">UNCHASED</span>;
-      case 'UNRECONCILED': return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-md uppercase">UNRECONCILED</span>;
-      default: return <span>{status}</span>;
+      case 'CASHED':
+        return <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-emerald-100">CASHED</span>;
+      case 'UNCASHED':
+        return <span className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100">UNCASHED</span>;
+      case 'UNRECONCILED':
+        return <span className="px-3 py-1 bg-rose-50 text-rose-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-rose-100">UNRECONCILED</span>;
+      default:
+        return <span className="px-3 py-1 bg-slate-50 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-100">{status}</span>;
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 mt-6 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-slate-800">Cheque List</h3>
-        <button onClick={() => fetchCheques(pagination.page)} className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded text-sm hover:bg-indigo-100">Refresh</button>
+    <div className="glass-card rounded-[2.5rem] shadow-premium border-0 overflow-hidden animate-fade-in-up">
+      <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-transparent flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight font-heading flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+              <ListFilter className="h-4 w-4 text-white" />
+            </div>
+            Active Cheque Register
+          </h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Real-time inventory of all cheques</p>
+        </div>
+        <button 
+          onClick={() => fetchCheques(pagination.page)} 
+          className="p-3 bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/50 rounded-2xl transition-all shadow-sm active:scale-95"
+        >
+          <RotateCcw className="h-5 w-5" />
+        </button>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
-              <th className="px-6 py-3 font-medium">Select</th>
-              <th className="px-6 py-3 font-medium">Issue Date</th>
-              <th className="px-6 py-3 font-medium">Transaction Date</th>
-              <th className="px-6 py-3 font-medium">Cheque No</th>
-              <th className="px-6 py-3 font-medium">Description</th>
-              <th className="px-6 py-3 font-medium text-right">Amount</th>
-              <th className="px-6 py-3 font-medium text-center">Status</th>
-              <th className="px-6 py-3 font-medium text-center">Action</th>
+            <tr className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-[0.15em] border-b border-slate-100">
+              <th className="px-8 py-5 font-black">Issue Date</th>
+              <th className="px-8 py-5 font-black">Matched Date</th>
+              <th className="px-8 py-5 font-black">Cheque No</th>
+              <th className="px-8 py-5 font-black">Description</th>
+              <th className="px-8 py-5 font-black text-right">Amount</th>
+              <th className="px-8 py-5 font-black text-center">Status</th>
+              <th className="px-8 py-5 font-black text-right">Activity</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-sm text-slate-700">
+          <tbody className="divide-y divide-slate-50 text-[13px] text-slate-600 font-medium">
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="text-center py-12">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-indigo-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-                  <span className="ml-3 text-slate-500">Loading cheques...</span>
+                <td colSpan={7} className="px-8 py-32 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="h-16 w-16 rounded-full border-4 border-emerald-100 border-t-emerald-600 animate-spin"></div>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Retrieving Records...</p>
+                  </div>
                 </td>
               </tr>
             ) : cheques.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-4 text-slate-500">No cheques found.</td></tr>
+              <tr>
+                <td colSpan={7} className="px-8 py-32 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-16 w-16 rounded-3xl bg-slate-50 flex items-center justify-center">
+                      <Search className="h-8 w-8 text-slate-200" />
+                    </div>
+                    <p className="text-slate-900 font-black tracking-tight">No Records Available</p>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Start by adding a new cheque entry</p>
+                  </div>
+                </td>
+              </tr>
             ) : cheques.map((cheque) => (
-              <tr key={cheque._id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4"><input type="checkbox" className="rounded border-slate-300" /></td>
-                <td className="px-6 py-4 whitespace-nowrap">{new Date(cheque.issueDate).toLocaleDateString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-indigo-600 font-medium">
+              <tr key={cheque._id} className="hover:bg-slate-50/80 transition-all duration-200 group">
+                <td className="px-8 py-5 whitespace-nowrap font-bold text-slate-500">{new Date(cheque.issueDate).toLocaleDateString()}</td>
+                <td className="px-8 py-5 whitespace-nowrap text-emerald-600 font-black">
                   {cheque.bsDate ? new Date(cheque.bsDate).toLocaleDateString() : '-'}
                 </td>
-                <td className="px-6 py-4 font-mono text-slate-600">{cheque.chequeNo}</td>
-                <td className="px-6 py-4">{cheque.description}</td>
-                <td className="px-6 py-4 font-medium text-right">{cheque.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                <td className="px-6 py-4 text-center">{getStatusBadge(cheque.status)}</td>
-                <td className="px-6 py-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
+                <td className="px-8 py-5 font-mono font-black text-slate-400 group-hover:text-slate-900 transition-colors">{cheque.chequeNo}</td>
+                <td className="px-8 py-5 max-w-[250px] truncate font-bold text-slate-500">{cheque.description}</td>
+                <td className="px-8 py-5 font-black text-right text-slate-900 tracking-tighter text-sm">
+                  {cheque.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </td>
+                <td className="px-8 py-5 text-center">{getStatusBadge(cheque.status)}</td>
+                <td className="px-8 py-5 text-right">
+                  <div className="flex items-center justify-end gap-2">
                     <button 
                       onClick={() => setSelectedChequeId(cheque._id)}
-                      className="px-3 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md font-medium text-xs transition-colors"
+                      className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/50 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95"
                     >
-                      View Details
+                      Audit
                     </button>
                     {cheque.status !== 'UNCASHED' && (
                       <button 
                         onClick={() => setResettingChequeId(cheque._id)}
-                        className="px-3 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-md font-medium text-xs transition-colors"
+                        className="px-4 py-2 bg-white border border-amber-200 text-amber-600 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95"
                       >
                         Reset
                       </button>
@@ -134,7 +166,8 @@ export default function ChequeTable() {
           </tbody>
         </table>
       </div>
-      <div className="border-t border-slate-200 bg-slate-50 px-4">
+
+      <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/30">
         <Pagination 
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
@@ -149,6 +182,7 @@ export default function ChequeTable() {
         <ReconciliationDetailsModal 
           chequeId={selectedChequeId} 
           onClose={() => setSelectedChequeId(null)} 
+          onRefresh={() => fetchCheques(pagination.page)}
         />
       )}
 
@@ -156,9 +190,9 @@ export default function ChequeTable() {
         isOpen={!!resettingChequeId}
         onClose={() => setResettingChequeId(null)}
         onConfirm={() => resettingChequeId && handleResetCheque(resettingChequeId)}
-        title="Reset Cheque Status"
-        description="Are you sure you want to mark this cheque as unchased? This will remove its cashed status and free up any linked bank records."
-        confirmText="Reset Status"
+        title="Reset Lifecycle Status"
+        description="Proceed with reverting this cheque to unchased status? This will break all current reconciliation links."
+        confirmText="Confirm Reset"
         variant="destructive"
       />
 

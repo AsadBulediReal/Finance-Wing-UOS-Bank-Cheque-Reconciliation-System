@@ -39,12 +39,18 @@ export default function UploadStatement() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 border-t-4 border-t-emerald-500">
-      <h3 className="text-lg font-medium text-slate-800 mb-4">Upload Bank Statement File</h3>
+    <div className="glass-card rounded-[2.5rem] shadow-premium border-0 p-10 animate-fade-in-up relative overflow-hidden group">
+      <div className="absolute -right-10 -top-10 h-40 w-40 bg-emerald-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+      <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+          <Upload className="h-5 w-5 text-emerald-600" />
+        </div>
+        Bulk Statement Integration
+      </h3>
       
       <div 
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed ${file ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-50'} rounded-lg p-10 text-center cursor-pointer hover:bg-slate-100 transition-colors mb-6`}
+        className={`border-2 border-dashed ${file ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'} rounded-[2rem] p-16 text-center cursor-pointer hover:bg-slate-100/50 transition-all group/drop mb-10`}
       >
         <input 
           type="file" 
@@ -53,44 +59,55 @@ export default function UploadStatement() {
           className="hidden" 
           accept=".csv,.xlsx"
         />
-        <Upload className={`h-12 w-12 ${file ? 'text-emerald-500' : 'text-slate-400'} mx-auto mb-4`} />
-        <p className="text-base font-medium text-slate-700">{file ? file.name : 'Choose Bank Statement File'}</p>
-        <p className="text-sm text-slate-500 mt-2">The system will automatically extract all records and metadata.</p>
-        <p className="text-xs text-slate-400 mt-1">(Allowed formats: .csv, .xlsx)</p>
+        <div className={`h-20 w-20 rounded-3xl ${file ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'bg-slate-100 text-slate-400 group-hover/drop:bg-white group-hover/drop:text-emerald-500'} mx-auto mb-6 flex items-center justify-center transition-all duration-500`}>
+          <Upload className="h-10 w-10" />
+        </div>
+        <p className="text-lg font-black text-slate-800 tracking-tight">{file ? file.name : 'Select bank export file'}</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">The AI engine will automatically parse and map all fields</p>
       </div>
       
-      <div className="mt-6 border border-slate-200 rounded-lg overflow-hidden">
-        <div className="bg-emerald-50 px-4 py-2 border-b border-slate-200">
-          <h4 className="text-sm font-semibold text-emerald-800 text-center uppercase tracking-wider">Required File Structure</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="bg-emerald-50/50 border border-emerald-100 p-8 rounded-[2rem] relative">
+          <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
+          <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-4">Required Data Structure:</h4>
+          <div className="space-y-3 text-[11px] font-bold text-slate-500">
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
+              <p><span className="text-emerald-700">Account Mapping:</span> Detected on row 2</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
+              <p><span className="text-emerald-700">Header Index:</span> Expected on row 11</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
+              <p><span className="text-emerald-700">Payload:</span> Transactions starting row 12</p>
+            </div>
+          </div>
         </div>
-        <div className="p-4 bg-slate-50 text-xs text-slate-600 leading-relaxed">
-          <p className="mb-2"><span className="font-bold text-emerald-700">Rows 1-10:</span> Metadata (Account Number on Row 2, Branch on Row 6)</p>
-          <p className="mb-2"><span className="font-bold text-emerald-700">Row 11:</span> Headers (Transaction Date, Value Date, Transaction Reference No, Description, Debit, Credit, Balance)</p>
-          <p><span className="font-bold text-emerald-700">Row 12+:</span> Transaction Records</p>
+
+        <div className="flex flex-col gap-4 lg:pt-4">
+          <button 
+            onClick={handleUpload}
+            disabled={!file || isUploading}
+            className={`w-full py-5 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3 ${!file || isUploading ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-1'}`}
+          >
+            {isUploading ? (
+              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {isUploading ? 'SYNCHRONIZING...' : 'START IMPORT ENGINE'}
+          </button>
+          <button 
+            onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+            className="w-full py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all active:scale-95"
+          >
+            Clear Selection
+          </button>
         </div>
       </div>
 
-      <div className="mt-8 flex gap-3">
-        <button 
-          onClick={handleUpload}
-          disabled={!file || isUploading}
-          className={`px-6 py-2.5 ${!file || isUploading ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2`}
-        >
-          {isUploading ? (
-            <>Processing...</>
-          ) : (
-            <>
-              <Upload className="h-4 w-4" /> Start Import
-            </>
-          )}
-        </button>
-        <button 
-          onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-          className="px-6 py-2.5 bg-slate-200 text-slate-700 rounded-md text-sm font-medium hover:bg-slate-300 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
       <ConfirmAction
         isOpen={!!alertConfig?.isOpen}
         onClose={() => setAlertConfig(null)}

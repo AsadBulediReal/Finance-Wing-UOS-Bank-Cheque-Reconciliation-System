@@ -67,8 +67,9 @@ export const markUnchased = async (req: Request, res: Response) => {
     for (const record of records) {
       // 2. Reset the associated bank transaction status
       if (record.transactionId) {
-        await StatementTransaction.findByIdAndUpdate(record.transactionId, { status: 'UNRECONCILED' });
-        console.log(`[Reconciliation] Reset bank transaction: ${record.transactionId}`);
+        const transactionId = (record.transactionId as any)._id || record.transactionId;
+        await StatementTransaction.findByIdAndUpdate(transactionId, { status: 'UNRECONCILED' });
+        console.log(`[Reconciliation] Reset bank transaction: ${transactionId}`);
       }
       // 3. Delete the reconciliation record
       await record.deleteOne();

@@ -26,8 +26,10 @@ export const getStatementTransactions = async (req: Request, res: Response) => {
 
 export const getAllTransactions = async (req: Request, res: Response) => {
   try {
-    const { dateFrom, dateTo, valueDateFrom, valueDateTo, accountNo, refNo, description, debit, credit, amount, balance, page = 1, limit = 50 } = req.query;
+    const { status, dateFrom, dateTo, valueDateFrom, valueDateTo, accountNo, refNo, description, debit, credit, amount, balance, page = 1, limit = 50 } = req.query;
     let query: any = {};
+    
+    if (status) query.status = status;
     
     // Specific field filters
     if (accountNo) query.accountNo = { $regex: accountNo, $options: 'i' };

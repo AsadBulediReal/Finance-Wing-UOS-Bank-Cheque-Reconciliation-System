@@ -12,6 +12,10 @@ export const api = {
   // Cheques
   getCheques: (params?: { status?: string; search?: string; page?: number; limit?: number; [key: string]: any }) => 
     apiClient.get('/cheques', { params }).then(res => res.data),
+  exportCheques: (params?: any) => {
+    const queryString = new URLSearchParams(params).toString();
+    window.location.href = `/api/cheques/export?${queryString}`;
+  },
   getChequeById: (id: string) => apiClient.get(`/cheques/${id}`).then(res => res.data),
   addCheque: (data: any) => apiClient.post('/cheques', data).then(res => res.data),
   uploadCheques: (file: File) => {
