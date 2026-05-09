@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
 import ReconciliationDetailsModal from './ReconciliationDetailsModal';
 import Pagination from '../ui/Pagination';
-import { Loader2, Search, Filter, ChevronDown, ChevronUp, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp, RotateCcw, FileSpreadsheet } from 'lucide-react';
 
 export default function RecentReconciliationTable() {
   const [cheques, setCheques] = useState<any[]>([]);
@@ -304,20 +304,22 @@ export default function RecentReconciliationTable() {
         </table>
       </div>
 
-      <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/30">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalEntries={totalEntries}
-          pageSize={limit}
-          onPageSizeChange={(size) => {
-            setLimit(size);
-            setPage(1);
-          }}
-          pageSizeOptions={[5, 10, 20, 50]}
-        />
-      </div>
+      {cheques.length > 0 && (
+        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/30">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalEntries={totalEntries}
+            pageSize={limit}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+            pageSizeOptions={[5, 10, 20, 50]}
+          />
+        </div>
+      )}
 
       {selectedChequeId && (
         <ReconciliationDetailsModal 

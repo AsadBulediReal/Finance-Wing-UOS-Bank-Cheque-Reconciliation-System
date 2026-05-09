@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import UploadStatement from '../components/statements/UploadStatement';
-import DownloadStatement from '../components/statements/DownloadStatement';
+
 import { UploadCloud, DownloadCloud, Search } from 'lucide-react';
 import { api } from '../lib/api';
 import Pagination from '../components/ui/Pagination';

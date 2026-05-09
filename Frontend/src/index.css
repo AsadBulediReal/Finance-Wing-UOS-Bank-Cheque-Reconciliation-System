@@ -57,19 +57,28 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--color-border);
+    outline-color: color-mix(in srgb, var(--color-ring) 50%, transparent);
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight;
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
   }
   
@@ -80,11 +89,17 @@
   }
 
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-0.25rem);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --tw-shadow-color: rgba(99, 102, 241, 0.1);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
   }
   
   .bg-gradient-premium {
-    @apply bg-gradient-to-br from-slate-50 via-white to-blue-50/40;
+    background-image: linear-gradient(to bottom right, var(--color-slate-50), white, color-mix(in srgb, var(--color-blue-50) 40%, transparent));
     background-attachment: fixed;
   }
   

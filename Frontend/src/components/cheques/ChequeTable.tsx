@@ -167,16 +167,18 @@ export default function ChequeTable() {
         </table>
       </div>
 
-      <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/30">
-        <Pagination 
-          currentPage={pagination.page}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
-          totalEntries={pagination.total}
-          pageSize={pagination.limit}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      </div>
+      {cheques.length > 0 && (
+        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/30">
+          <Pagination 
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+            totalEntries={pagination.total}
+            pageSize={pagination.limit}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </div>
+      )}
 
       {selectedChequeId && (
         <ReconciliationDetailsModal 

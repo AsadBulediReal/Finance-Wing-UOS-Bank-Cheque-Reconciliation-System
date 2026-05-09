@@ -49,4 +49,7 @@ export const api = {
 
   // Dashboard
   getDashboardSummary: () => apiClient.get('/dashboard/summary').then(res => res.data),
+
+  // System
+  checkHealth: () => apiClient.get('/health').then(res => res.data),
 };

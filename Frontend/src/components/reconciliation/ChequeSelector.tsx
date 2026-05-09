@@ -250,16 +250,18 @@ export default function ChequeSelector({ onSelect, selectedId, refreshKey }: Che
             </table>
           </div>
           
-          <div className="border-t border-slate-100 bg-slate-50/50 p-2">
-            <Pagination 
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              onPageChange={handlePageChange}
-              pageSize={pagination.limit}
-              onPageSizeChange={handlePageSizeChange}
-              className="py-1"
-            />
-          </div>
+          {unreconciledCheques.filter(c => c.status !== 'CASHED').length > 0 && (
+            <div className="border-t border-slate-100 bg-slate-50/50 p-2">
+              <Pagination 
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                pageSize={pagination.limit}
+                onPageSizeChange={handlePageSizeChange}
+                className="py-1"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
